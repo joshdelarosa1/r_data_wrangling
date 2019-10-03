@@ -4,10 +4,11 @@ author: "Josh DeLaRosa"
 date: "`r format(Sys.time(), '%Y %b %d')`"
 output: 
   html_document: 
-    highlight: tango
+    highlight: zenburn
     theme: united
     toc: yes
     toc_float: yes
+    keep_md: yes
 ---
 
 # Function Creation
