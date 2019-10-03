@@ -4,11 +4,11 @@ author: "Josh DeLaRosa"
 date: "2019 Oct 02"
 output: 
   html_document: 
-    highlight: tango
+    highlight: zenburn
     theme: united
     toc: yes
     toc_float: yes
-    keep_md: true
+    keep_md: yes
 ---
 
 # Function Creation
@@ -40,6 +40,16 @@ census_latlong<-function (street, city, state)
 }
 ```
 
+Test `census_latlong`function
+
+```r
+census_latlong("1600 PENNSYLVANIA AVE NW", "WASHINGTON", "DC")
+```
+
+```
+## [1] "38.898754,-77.03535"
+```
+
 Create function for Census geography look-up using address
 
 ```r
@@ -66,6 +76,56 @@ call_geolocator2<-function (street, city, state)
     return(response$result$addressMatches[[1]]$geographies$`Census Blocks`[[1]]$GEOID)
   }
 }
+```
+
+Test `call_geolocator2`function
+
+```r
+call_geolocator2("1600 PENNSYLVANIA AVE NW", "WASHINGTON", "DC")
+```
+
+```
+## Address (1600 PENNSYLVANIA AVE NW WASHINGTON DC) returned more than one address match. The first match was returned.
+```
+
+```
+## [1] "110010062021036"
+```
+
+
+```r
+call_geolocator_latlon2<-function (lat, lon) 
+  {
+    call_start <- "https://geocoding.geo.census.gov/geocoder/geographies/coordinates?"
+    url <- paste0("x=", lon, "&y=", lat)
+    call_end <- "&benchmark=9&vintage=910&layers=14&format=json"
+    url_full <- paste0(call_start, url, call_end)
+    r <- httr::GET(url_full)
+    httr::stop_for_status(r)
+    response <- httr::content(r)
+    if (length(response$result$geographies$`Census Blocks`) == 
+        0) {
+      message(paste0("Lat/lon (", lat, ", ", lon, ") returned no geocodes. An NA was returned."))
+      return(NA_character_)
+    }
+    else {
+      if (length(response$result$geographies$`Census Blocks`) > 
+          1) {
+        message(paste0("Lat/lon (", lat, ", ", lon, ") returned more than geocode. The first match was returned."))
+      }
+      return(response$result$geographies$`Census Blocks`[[1]]$GEOID)
+    }
+  }
+```
+
+Test `call_geolocator_latlon2`function
+
+```r
+call_geolocator_latlon2("38.898754","-77.03535")
+```
+
+```
+## [1] "110010062021031"
 ```
 
 Create function that uses the `call_geolocator2` and `census_latlong`
@@ -106,33 +166,6 @@ append_geoid2<-function (address, geoid_type = "bl")
 }
 ```
 
-Create function to geocode address and pick-up lat/long
-
-```r
-  call_geolocator_latlon2<-function (lat, lon) 
-  {
-    call_start <- "https://geocoding.geo.census.gov/geocoder/geographies/coordinates?"
-    url <- paste0("x=", lon, "&y=", lat)
-    call_end <- "&benchmark=9&vintage=910&layers=14&format=json"
-    url_full <- paste0(call_start, url, call_end)
-    r <- httr::GET(url_full)
-    httr::stop_for_status(r)
-    response <- httr::content(r)
-    if (length(response$result$geographies$`Census Blocks`) == 
-        0) {
-      message(paste0("Lat/lon (", lat, ", ", lon, ") returned no geocodes. An NA was returned."))
-      return(NA_character_)
-    }
-    else {
-      if (length(response$result$geographies$`Census Blocks`) > 
-          1) {
-        message(paste0("Lat/lon (", lat, ", ", lon, ") returned more than geocode. The first match was returned."))
-      }
-      return(response$result$geographies$`Census Blocks`[[1]]$GEOID)
-    }
-  }
-```
-
 # Geocode
 Set library
 
@@ -140,7 +173,24 @@ Set library
 library("tidyverse")
 ```
 
-Test geocoding function
+```
+## ── Attaching packages ─────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+```
+
+```
+## ✔ ggplot2 3.2.0     ✔ purrr   0.3.2
+## ✔ tibble  2.1.3     ✔ dplyr   0.8.1
+## ✔ tidyr   0.8.3     ✔ stringr 1.4.0
+## ✔ readr   1.3.1     ✔ forcats 0.4.0
+```
+
+```
+## ── Conflicts ────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+```
+
+Test `census_latlong` function
 
 ```r
 census_latlong("42-09 28th St"," Long Island City", "NY")
